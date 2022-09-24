@@ -30,6 +30,8 @@ namespace Composition.WindowsRuntimeHelpers
 {
     public static class CoreMessagingHelper
     {
+        const int WS_EX_TRANSPARENT = 0x00000020;
+        const int GWL_EXSTYLE = (-20);
         enum DISPATCHERQUEUE_THREAD_APARTMENTTYPE
         {
             DQTAT_COM_NONE = 0,
@@ -59,8 +61,6 @@ namespace Composition.WindowsRuntimeHelpers
             CallingConvention = CallingConvention.StdCall
             )]
         static extern UInt32 CreateDispatcherQueueController(DispatcherQueueOptions options, out IntPtr dispatcherQueueController);
-
-
         public static DispatcherQueueController CreateDispatcherQueueControllerForCurrentThread()
         {
             var options = new DispatcherQueueOptions

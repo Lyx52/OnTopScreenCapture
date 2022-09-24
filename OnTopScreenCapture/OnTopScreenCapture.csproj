@@ -7,7 +7,7 @@
     <ProjectGuid>{4DDD37B1-E3E8-46C1-BDE9-3039A93DAF27}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>OnTopCapture</RootNamespace>
-    <AssemblyName>ScreenCapture</AssemblyName>
+    <AssemblyName>OnTopScreenCapture</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -38,9 +38,13 @@
   <PropertyGroup>
     <StartupObject>OnTopCapture.App</StartupObject>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>AppIcon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -60,9 +64,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Capture\CaptureCompositor.cs" />
-    <Compile Include="MonitorEnumerationHelper.cs" />
     <Compile Include="Capture\ScreenCapture.cs" />
-    <Compile Include="WindowEnumerationHelper.cs" />
+    <Compile Include="Util\Enums\DWMWindowAttribute.cs" />
+    <Compile Include="Util\Enums\GetAncestorFlags.cs" />
+    <Compile Include="Util\Enums\GWL.cs" />
+    <Compile Include="Util\Enums\WindowStyle.cs" />
+    <Compile Include="Util\ExternalFuncApi.cs" />
+    <Compile Include="Util\MonitorInfo.cs" />
+    <Compile Include="Util\WindowHelper.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -109,8 +118,13 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2002-preview" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="AppIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

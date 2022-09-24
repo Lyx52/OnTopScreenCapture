@@ -5,24 +5,20 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Capture;
 using Windows.UI.Composition;
-using System.Runtime.InteropServices;
+using OnTopCapture.Util;
+using static OnTopCapture.Util.ExternalApi;
 
 namespace OnTopCapture
 {
 
     public partial class MainWindow : Window
     {
-        [System.Runtime.InteropServices.DllImport("User32.dll")]
-        private static extern bool ShowWindow(IntPtr handle, int nCmdShow);
-        [System.Runtime.InteropServices.DllImport("User32.dll")]
-        private static extern bool IsIconic(IntPtr handle);
         private IntPtr WindowHandle;
         private Compositor WindowCompositor;
         private CompositionTarget TargetComposition;
@@ -37,7 +33,7 @@ namespace OnTopCapture
             set
             {
                 mIsCapturing = value;
-                StopCaptureButton.IsEnabled = value;
+                StopCaptureButtonTray.IsEnabled = value;
                 PrimaryMonitorCaptureButton.IsEnabled = !value;
             }
         }
@@ -48,6 +44,8 @@ namespace OnTopCapture
             {
                 mIsOnTop = value;
                 this.Topmost = value;
+                WindowOnTopButtonTray.IsChecked = value;
+                WindowOnTopButton.IsChecked = value;
                 if (mIsOnTop)
                 {
                     this.Activate();
@@ -79,7 +77,6 @@ namespace OnTopCapture
             Root.RelativeSizeAdjustment = Vector2.One;
             TargetComposition.Root = Root;
 
-            // Setup the rest of the sample application.
             Compositor = new CaptureCompositor(WindowCompositor);
             Root.Children.InsertAtTop(Compositor.Visual);
         }
@@ -92,7 +89,7 @@ namespace OnTopCapture
                 {
                     if (string.IsNullOrWhiteSpace(process.MainWindowTitle) || process.MainWindowHandle == WindowHandle)
                         return false;
-                    return WindowEnumerationHelper.IsWindowValidForCapture(process.MainWindowHandle);
+                    return WindowHelper.IsWindowValidForCapture(process.MainWindowHandle);
                 }).ToList();
                 Processes = new ObservableCollection<Process>(processses);
                 ProcessCaptureList.Items.Clear();
@@ -113,6 +110,7 @@ namespace OnTopCapture
         }
         private void StartHwndCapture(IntPtr hwnd)
         {
+            WindowHelper.SetWindowExTransparent(WindowHandle, true);
             GraphicsCaptureItem item = CaptureHelper.CreateItemForWindow(hwnd);
             if (item != null)
             {
@@ -123,6 +121,7 @@ namespace OnTopCapture
 
         private void StartHmonCapture(IntPtr hmon)
         {
+            WindowHelper.SetWindowExTransparent(WindowHandle, true);
             GraphicsCaptureItem item = CaptureHelper.CreateItemForMonitor(hmon);
             if (item != null)
             {
@@ -132,14 +131,13 @@ namespace OnTopCapture
 
         private void StartPrimaryMonitorCapture()
         {
-            MonitorInfo monitor = (from m in MonitorEnumerationHelper.GetMonitors()
-                           where m.IsPrimary
-                           select m).First();
+            MonitorInfo monitor = WindowHelper.GetMonitors().Where((mon) => mon.IsPrimary).First();
             StartHmonCapture(monitor.Hmon);
         }
 
         private void StopCapture()
         {
+            WindowHelper.SetWindowExTransparent(WindowHandle, false);
             this.IsCapturing = false;
             Compositor.StopCapture();
         }
@@ -149,7 +147,7 @@ namespace OnTopCapture
         }
         private void WindowOnTop_Click(object sender, RoutedEventArgs e)
         {
-            this.IsOnTop = WindowOnTopButton.IsChecked;
+            this.IsOnTop = ((MenuItem)sender).IsChecked;
         }
         private void PrimaryMonitorCapture_Click(object sender, RoutedEventArgs e)
         {

@@ -26,51 +26,61 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using OnTopCapture.Util.Enums;
 using Windows.Foundation;
-
-namespace OnTopCapture
+using static OnTopCapture.Util.ExternalApi;
+namespace OnTopCapture.Util
 {
-    class MonitorInfo
+    static class WindowHelper
     {
-        public bool IsPrimary { get; set; }
-        public Vector2 ScreenSize { get; set; }
-        public Rect MonitorArea { get; set; }
-        public Rect WorkArea { get; set; }
-        public string DeviceName { get; set; }
-        public IntPtr Hmon { get; set; }
-    }
-
-    static class MonitorEnumerationHelper
-    {
-        delegate bool EnumMonitorsDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
-
-        [StructLayout(LayoutKind.Sequential)]
-        public struct RECT
+        public static void SetWindowExTransparent(IntPtr hwnd, bool enabled)
         {
-            public int left;
-            public int top;
-            public int right;
-            public int bottom;
+            var extendedStyle = GetWindowLong(hwnd, (int)GWL.GWL_EXSTYLE);
+            SetWindowLong(hwnd, (int)GWL.GWL_EXSTYLE, enabled ? extendedStyle | (int)WindowStyles.WS_EX_TRANSPARENT : extendedStyle & ~(int)WindowStyles.WS_EX_TRANSPARENT);
         }
 
-        private const int CCHDEVICENAME = 32;
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        internal struct MonitorInfoEx
+        static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
         {
-            public int Size;
-            public RECT Monitor;
-            public RECT WorkArea;
-            public uint Flags;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = CCHDEVICENAME)]
-            public string DeviceName;
+            if (IntPtr.Size == 8)
+                return GetWindowLongPtr64(hWnd, nIndex);
+            else
+                return GetWindowLongPtr32(hWnd, nIndex);
         }
 
-        [DllImport("user32.dll")]
-        static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, EnumMonitorsDelegate lpfnEnum, IntPtr dwData);
+        public static bool IsWindowValidForCapture(IntPtr hwnd)
+        {
+            if (hwnd.ToInt32() == 0)
+            {
+                return false;
+            }
+            if (hwnd == GetShellWindow())
+            {
+                return false;
+            }
+            if (!IsWindowVisible(hwnd))
+            {
+                return false;
+            }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto)]
-        static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
+            if (GetAncestor(hwnd, GetAncestorFlags.GetRoot) != hwnd)
+            {
+                return false;
+            }
+            var style = (WindowStyles)GetWindowLongPtr(hwnd, (int)GWL.GWL_STYLE).ToInt64();
+            if (style.HasFlag(WindowStyles.WS_DISABLED))
+            {
+                return false;
+            }
 
+            var cloaked = false;
+            var hrTemp = DwmGetWindowAttribute(hwnd, DWMWindowAttribute.Cloaked, out cloaked, Marshal.SizeOf<bool>());
+            if (hrTemp == 0 && cloaked)
+            {
+                return false;
+            }
+
+            return true;
+        }
         public static IEnumerable<MonitorInfo> GetMonitors()
         {
             var result = new List<MonitorInfo>();
@@ -98,5 +108,6 @@ namespace OnTopCapture
                 }, IntPtr.Zero);
             return result;
         }
+
     }
 }
