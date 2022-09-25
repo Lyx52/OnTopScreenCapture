@@ -1,0 +1,8 @@
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.csproj.AssemblyReference.cache
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.AssemblyInfoInputs.cache
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.AssemblyInfo.cs
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.csproj.CoreCompileInputs.cache
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.dll
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.pdb
+C:\Users\Ikars\Documents\Projects\OnTopScreenCapture\Composition.WindowsRuntimeHelpers\netstandard2.0\netstandard2.0\Composition.WindowsRuntimeHelpers.deps.json

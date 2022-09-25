@@ -22,7 +22,8 @@
                     <ContextMenu>
                         <MenuItem Name="ExitButton" Header="Exit Application" Click="Exit_Click" />
                         <MenuItem Name="WindowOnTopButton" Header="Window on top" IsCheckable="True" Click="WindowOnTop_Click"/>
-                        <Separator />
+                        <MenuItem Name="WindowOpacity" Header="Opacity" Click="OpacityList_Click" />
+                    <Separator />
                         <MenuItem Name="PrimaryMonitorCaptureButton" Header="Start Capturing PrimaryMonitor.." Click="PrimaryMonitorCapture_Click" />
                         <MenuItem Name="ProcessCaptureList" Header="Start Capturing a process.." Click="ProcessList_Click"/>
                     </ContextMenu>

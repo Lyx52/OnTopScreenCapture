@@ -62,6 +62,24 @@ namespace OnTopCapture
             WindowHandle = interopWindow.Handle;
             InitComposition();
             QueryWindows();
+
+            // Setup opacity context menu
+            foreach(var opacity in new int[] { 100, 75, 50, 25 })
+            {
+                // Create opacity menu item and click event
+                var item = new MenuItem { Header = $"Opacity {opacity}%" };
+                item.Tag = (double)opacity / 100.0f;
+                item.IsChecked = opacity == 100;
+                item.Click += ((s, a) => {
+                    DisplayWindow.Opacity = (double)item.Tag;
+                    foreach(MenuItem opacityItem in WindowOpacity.Items)
+                    {
+                        opacityItem.IsChecked = opacityItem == s;
+                    }
+                });
+
+                WindowOpacity.Items.Add(item);
+            }
         }
 
         private void InitComposition()
@@ -106,6 +124,7 @@ namespace OnTopCapture
                     });
                     ProcessCaptureList.Items.Add(item);
                 }
+                ProcessCaptureListTray.ItemsSource = ProcessCaptureList.Items;
             }
         }
         private void StartHwndCapture(IntPtr hwnd)
@@ -164,6 +183,10 @@ namespace OnTopCapture
         private void StopCapturing_Click(object sender, RoutedEventArgs e)
         {
             this.StopCapture();
+        }
+        private void OpacityList_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
