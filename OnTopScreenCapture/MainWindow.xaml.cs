@@ -72,7 +72,8 @@ namespace OnTopCapture
                 item.IsChecked = opacity == 100;
                 item.Click += ((s, a) => {
                     DisplayWindow.Opacity = (double)item.Tag;
-                    foreach(MenuItem opacityItem in WindowOpacity.Items)
+                    Compositor.Opacity = (double)item.Tag;
+                    foreach (MenuItem opacityItem in WindowOpacity.Items)
                     {
                         opacityItem.IsChecked = opacityItem == s;
                     }

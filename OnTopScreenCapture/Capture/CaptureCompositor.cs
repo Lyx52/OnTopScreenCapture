@@ -57,11 +57,14 @@ namespace OnTopCapture.Capture
             ContentSprite = ContentCompositor.CreateSpriteVisual();
             ContentSprite.RelativeSizeAdjustment = Vector2.One;
             ContentSprite.Brush = ContentBrush;
-            //content.Shadow = shadow;
             RootContainer.Children.InsertAtTop(ContentSprite);
         }
 
         public Visual Visual => RootContainer;
+        public double Opacity
+        {
+            set => RootContainer.Opacity = (float)value;
+        }
 
         public void Dispose()
         {
