@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
+using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
@@ -61,26 +62,12 @@ namespace OnTopCapture
             var interopWindow = new WindowInteropHelper(this);
             WindowHandle = interopWindow.Handle;
             InitComposition();
-            QueryWindows();
+            SetWindowItems(ProcessCaptureListTray);
+            SetWindowItems(ProcessCaptureList);
+            SetOpacityItems(WindowOpacity);
+            SetOpacityItems(WindowOpacityTray);
 
-            // Setup opacity context menu
-            foreach(var opacity in new int[] { 100, 75, 50, 25 })
-            {
-                // Create opacity menu item and click event
-                var item = new MenuItem { Header = $"Opacity {opacity}%" };
-                item.Tag = (double)opacity / 100.0f;
-                item.IsChecked = opacity == 100;
-                item.Click += ((s, a) => {
-                    DisplayWindow.Opacity = (double)item.Tag;
-                    Compositor.Opacity = (double)item.Tag;
-                    foreach (MenuItem opacityItem in WindowOpacity.Items)
-                    {
-                        opacityItem.IsChecked = opacityItem == s;
-                    }
-                });
 
-                WindowOpacity.Items.Add(item);
-            }
         }
 
         private void InitComposition()
@@ -99,23 +86,54 @@ namespace OnTopCapture
             Compositor = new CaptureCompositor(WindowCompositor);
             Root.Children.InsertAtTop(Compositor.Visual);
         }
+        private void SetOpacityItems(object itemList)
+        {
+            MenuItem list = (MenuItem)itemList;
 
-        private void QueryWindows()
+            // Setup opacity context menu
+            foreach (var opacity in new int[] { 100, 75, 50, 25 })
+            {
+                // Create opacity menu item and click event
+                var item = new MenuItem { Header = $"Opacity {opacity}%" };
+                item.Tag = (double)opacity / 100.0f;
+                item.IsChecked = opacity == 100;
+                item.Click += ((s, a) => {
+                    DisplayWindow.Opacity = (double)item.Tag;
+                    Compositor.Opacity = (double)item.Tag;
+                    foreach (MenuItem opacityItem in WindowOpacity.Items)
+                    {
+                        opacityItem.IsChecked = (double)opacityItem.Tag == (double)((MenuItem)s).Tag;
+                    }
+                    foreach (MenuItem opacityItem in WindowOpacityTray.Items)
+                    {
+                        opacityItem.IsChecked = (double)opacityItem.Tag == (double)((MenuItem)s).Tag;
+                    }
+                });
+
+                list.Items.Add(item);
+            }
+        }
+        private void SetWindowItems(object itemList)
         {
             if (ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
             {
+                MenuItem list = (MenuItem)itemList;
+                list.Items.Clear();
+
+                // Filter processes and find windows
                 var processses = Process.GetProcesses().Where((process) =>
                 {
                     if (string.IsNullOrWhiteSpace(process.MainWindowTitle) || process.MainWindowHandle == WindowHandle)
                         return false;
                     return WindowHelper.IsWindowValidForCapture(process.MainWindowHandle);
                 }).ToList();
+
+                // Add menu items
                 Processes = new ObservableCollection<Process>(processses);
-                ProcessCaptureList.Items.Clear();
                 foreach (Process p in Processes)
                 {
                     var item = new MenuItem { Header = $"{p.MainWindowTitle} ({p.ProcessName} - {p.Id})" };
-                    item.Click += ((s, e) => {
+                    item.Click += ((s, a) => {
                         if (IsIconic(p.MainWindowHandle))
                         {
                             ShowWindow(p.MainWindowHandle, 9); // SW_RESTORE
@@ -123,9 +141,9 @@ namespace OnTopCapture
                         }
                         this.StartHwndCapture(p.MainWindowHandle);
                     });
-                    ProcessCaptureList.Items.Add(item);
+
+                    list.Items.Add(item);
                 }
-                ProcessCaptureListTray.ItemsSource = ProcessCaptureList.Items;
             }
         }
         private void StartHwndCapture(IntPtr hwnd)
@@ -163,7 +181,7 @@ namespace OnTopCapture
         }
         private void ProcessList_Click(object sender, RoutedEventArgs e)
         {
-            this.QueryWindows();
+            SetWindowItems(sender);
         }
         private void WindowOnTop_Click(object sender, RoutedEventArgs e)
         {
@@ -184,10 +202,6 @@ namespace OnTopCapture
         private void StopCapturing_Click(object sender, RoutedEventArgs e)
         {
             this.StopCapture();
-        }
-        private void OpacityList_Click(object sender, RoutedEventArgs e)
-        {
-
         }
     }
 }
