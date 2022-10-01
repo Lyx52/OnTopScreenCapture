@@ -1,11 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 using OnTopCapture.Util.Enums;
 namespace OnTopCapture.Util
 {
     internal static class ExternalApi
     {
         public delegate bool EnumMonitorsDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
+        public delegate bool EnumWindowProc(IntPtr hWnd, IntPtr parameter);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -55,5 +58,49 @@ namespace OnTopCapture.Util
 
         [DllImport("user32.dll", CharSet = CharSet.Auto)]
         public static extern bool GetMonitorInfo(IntPtr hMonitor, ref MonitorInfoEx lpmi);
+
+        [DllImport("user32.dll", SetLastError = false)]
+        public static extern IntPtr GetDesktopWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr GetWindow(IntPtr hWnd, GetWindowCmd uCmd);
+
+        [DllImport("user32.dll")]
+        public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+
+        [DllImport("User32.dll")]
+        public static extern int SendMessage(IntPtr hwnd, WindowsMessage wmConstant, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int charCount);
+
+        [DllImport("User32.dll")]
+        public static extern int SendMessage(IntPtr hwnd, WindowsMessage wmConstant, int wParam, StringBuilder sb);
+
+        [DllImport("user32.dll", EntryPoint = "FindWindowEx", CharSet = CharSet.Auto)]
+        public static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
+
+        [DllImport("user32")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool EnumChildWindows(IntPtr window, EnumWindowProc callback, IntPtr i);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        [DllImport("Kernel32.dll")]
+        public static extern uint QueryFullProcessImageName(IntPtr hProcess, uint dwFlags, StringBuilder lpExeName, ref uint lpdwSize);
+
+        public static bool EnumWindow(IntPtr handle, IntPtr pointer)
+        {
+            GCHandle gch = GCHandle.FromIntPtr(pointer);
+            var list = (List<IntPtr>)gch.Target;
+            if (list == null)
+            {
+                throw new InvalidCastException("GCHandle Target could not be cast as List<IntPtr>");
+            }
+
+            list.Add(handle);
+            return true;
+        }
     }
 }

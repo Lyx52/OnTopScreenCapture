@@ -1,33 +1,33 @@
 ﻿using OnTopCapture.Capture;
 using Composition.WindowsRuntimeHelpers;
 using System;
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Collections.Generic;
-using System.Windows;
 using System.Windows.Controls;
+using System.Windows;
 using System.Windows.Interop;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Capture;
 using Windows.UI.Composition;
 using OnTopCapture.Util;
 using static OnTopCapture.Util.ExternalApi;
+using System.Windows.Media.Imaging;
+using System.Drawing;
 
 namespace OnTopCapture
 {
 
     public partial class MainWindow : Window
     {
-        private IntPtr WindowHandle;
+        public static IntPtr MainWindowHandle;
         private Compositor WindowCompositor;
         private CompositionTarget TargetComposition;
         private ContainerVisual Root;
         private CaptureCompositor Compositor;
-        private ObservableCollection<Process> Processes;
         private bool mIsOnTop = false;
         private bool mIsCapturing = false;
+        private bool mIsApiAvailable = false;
+        private int mLastWindowCount = 0;
         public bool IsCapturing
         {
             get => mIsCapturing;
@@ -60,7 +60,8 @@ namespace OnTopCapture
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             var interopWindow = new WindowInteropHelper(this);
-            WindowHandle = interopWindow.Handle;
+            mIsApiAvailable = ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8);
+            MainWindowHandle = interopWindow.Handle;
             InitComposition();
             SetWindowItems(ProcessCaptureListTray);
             SetWindowItems(ProcessCaptureList);
@@ -76,7 +77,7 @@ namespace OnTopCapture
             WindowCompositor = new Compositor();
 
             // Create a target for the window.
-            TargetComposition = WindowCompositor.CreateDesktopWindowTarget(WindowHandle, true);
+            TargetComposition = WindowCompositor.CreateDesktopWindowTarget(MainWindowHandle, true);
 
             // Attach the root visual.
             Root = WindowCompositor.CreateContainerVisual();
@@ -113,42 +114,47 @@ namespace OnTopCapture
                 list.Items.Add(item);
             }
         }
-        private void SetWindowItems(object itemList)
+        private void SetWindowItems(object rootObject)
         {
-            if (ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
+            if (mIsApiAvailable)
             {
-                MenuItem list = (MenuItem)itemList;
-                list.Items.Clear();
-
-                // Filter processes and find windows
-                var processses = Process.GetProcesses().Where((process) =>
-                {
-                    if (string.IsNullOrWhiteSpace(process.MainWindowTitle) || process.MainWindowHandle == WindowHandle)
-                        return false;
-                    return WindowHelper.IsWindowValidForCapture(process.MainWindowHandle);
-                }).ToList();
-
-                // Add menu items
-                Processes = new ObservableCollection<Process>(processses);
-                foreach (Process p in Processes)
-                {
-                    var item = new MenuItem { Header = $"{p.MainWindowTitle} ({p.ProcessName} - {p.Id})" };
-                    item.Click += ((s, a) => {
-                        if (IsIconic(p.MainWindowHandle))
+                MenuItem root = (MenuItem)rootObject;
+                var windows = WindowHelper.GetWindows();
+                if (windows.Count == mLastWindowCount)
+                    return;
+                
+                // Add/Refresh menu items
+                root.Items.Clear();
+                foreach (WindowInfo window in windows)
+                {     
+                    var item = new MenuItem { Header = $"{window.Caption} ({window.Process.ProcessName} - {window.ProcessId})" };
+                    var icon = window.Process.GetIcon();
+                    if (icon is Icon)
+                    {
+                        // Sometimes we dont have access to icon, so dont add it
+                        item.Icon = new System.Windows.Controls.Image
                         {
-                            ShowWindow(p.MainWindowHandle, 9); // SW_RESTORE
+                            Source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())
+                        };
+                    }
+    
+                  
+                    item.Click += ((s, a) => {
+                        if (IsIconic(window.Handle))
+                        {
+                            ShowWindow(window.Handle, 9); // SW_RESTORE
                             this.Activate(); // Restore ontop app as topmost
                         }
-                        this.StartHwndCapture(p.MainWindowHandle);
+                        this.StartHwndCapture(window.Handle);
                     });
 
-                    list.Items.Add(item);
+                    root.Items.Add(item);
                 }
             }
         }
         private void StartHwndCapture(IntPtr hwnd)
         {
-            WindowHelper.SetWindowExTransparent(WindowHandle, true);
+            WindowHelper.SetWindowExTransparent(MainWindowHandle, true);
             GraphicsCaptureItem item = CaptureHelper.CreateItemForWindow(hwnd);
             if (item != null)
             {
@@ -159,7 +165,7 @@ namespace OnTopCapture
 
         private void StartHmonCapture(IntPtr hmon)
         {
-            WindowHelper.SetWindowExTransparent(WindowHandle, true);
+            WindowHelper.SetWindowExTransparent(MainWindowHandle, true);
             GraphicsCaptureItem item = CaptureHelper.CreateItemForMonitor(hmon);
             if (item != null)
             {
@@ -170,12 +176,12 @@ namespace OnTopCapture
         private void StartPrimaryMonitorCapture()
         {
             MonitorInfo monitor = WindowHelper.GetMonitors().Where((mon) => mon.IsPrimary).First();
-            StartHmonCapture(monitor.Hmon);
+            StartHmonCapture(monitor.Handle);
         }
 
         private void StopCapture()
         {
-            WindowHelper.SetWindowExTransparent(WindowHandle, false);
+            WindowHelper.SetWindowExTransparent(MainWindowHandle, false);
             this.IsCapturing = false;
             Compositor.StopCapture();
         }

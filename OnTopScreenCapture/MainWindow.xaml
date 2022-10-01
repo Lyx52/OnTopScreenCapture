@@ -23,9 +23,9 @@
                         <MenuItem Name="ExitButton" Header="Exit Application" Click="Exit_Click" />
                         <MenuItem Name="WindowOnTopButton" Header="Window on top" IsCheckable="True" Click="WindowOnTop_Click"/>
                         <MenuItem Name="WindowOpacity" Header="Opacity" />
-                    <Separator />
+                        <Separator />
                         <MenuItem Name="PrimaryMonitorCaptureButton" Header="Start Capturing PrimaryMonitor.." Click="PrimaryMonitorCapture_Click" />
-                        <MenuItem Name="ProcessCaptureList" Header="Start Capturing a process.." Click="ProcessList_Click"/>
+                        <MenuItem Name="ProcessCaptureList" Header="Start Capturing a process.." MouseEnter="ProcessList_Click"/>
                     </ContextMenu>
                 </Rectangle.ContextMenu>
             </Rectangle>
@@ -40,7 +40,7 @@
                     <MenuItem IsEnabled="False" Name="StopCaptureButtonTray" Header="Stop Capturing" Click="StopCapturing_Click" />
                     <Separator />
                     <MenuItem Name="PrimaryMonitorCaptureButtonTray" Header="Start Capturing PrimaryMonitor.." Click="PrimaryMonitorCapture_Click" />
-                    <MenuItem Name="ProcessCaptureListTray" Header="Start Capturing a process.." Click="ProcessList_Click"/>
+                    <MenuItem Name="ProcessCaptureListTray" Header="Start Capturing a process.." MouseEnter="ProcessList_Click"/>
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>

@@ -11,6 +11,6 @@ namespace OnTopCapture.Util
         public Rect MonitorArea { get; set; }
         public Rect WorkArea { get; set; }
         public string DeviceName { get; set; }
-        public IntPtr Hmon { get; set; }
+        public IntPtr Handle { get; set; }
     }
 }

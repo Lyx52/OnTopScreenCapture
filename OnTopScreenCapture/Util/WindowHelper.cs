@@ -1,31 +1,9 @@
-﻿//  ---------------------------------------------------------------------------------
-//  Copyright (c) Microsoft Corporation.  All rights reserved.
-// 
-//  The MIT License (MIT)
-// 
-//  Permission is hereby granted, free of charge, to any person obtaining a copy
-//  of this software and associated documentation files (the "Software"), to deal
-//  in the Software without restriction, including without limitation the rights
-//  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//  copies of the Software, and to permit persons to whom the Software is
-//  furnished to do so, subject to the following conditions:
-// 
-//  The above copyright notice and this permission notice shall be included in
-//  all copies or substantial portions of the Software.
-// 
-//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//  THE SOFTWARE.
-//  ---------------------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using System.Text;
 using OnTopCapture.Util.Enums;
 using Windows.Foundation;
 using static OnTopCapture.Util.ExternalApi;
@@ -61,27 +39,106 @@ namespace OnTopCapture.Util
             {
                 return false;
             }
-
             if (GetAncestor(hwnd, GetAncestorFlags.GetRoot) != hwnd)
             {
                 return false;
             }
-            var style = (WindowStyles)GetWindowLongPtr(hwnd, (int)GWL.GWL_STYLE).ToInt64();
-            if (style.HasFlag(WindowStyles.WS_DISABLED))
+            if (hwnd == Process.GetCurrentProcess().MainWindowHandle)
             {
                 return false;
             }
-
-            var cloaked = false;
-            var hrTemp = DwmGetWindowAttribute(hwnd, DWMWindowAttribute.Cloaked, out cloaked, Marshal.SizeOf<bool>());
+            var hrTemp = DwmGetWindowAttribute(hwnd, DWMWindowAttribute.Cloaked, out bool cloaked, Marshal.SizeOf<bool>());
             if (hrTemp == 0 && cloaked)
             {
                 return false;
             }
 
+            var style = (WindowStyles)GetWindowLongPtr(hwnd, (int)GWL.GWL_STYLE).ToInt64();
+            if (style.HasFlag(WindowStyles.WS_POPUP) && !style.HasFlag(WindowStyles.WS_POPUPWINDOW))
+            {
+                return false;
+            }
             return true;
         }
-        public static IEnumerable<MonitorInfo> GetMonitors()
+
+        public static WindowInfo GetWindowInfo(IntPtr winHandle)
+        {
+            StringBuilder caption = new StringBuilder(1024);
+            StringBuilder className = new StringBuilder(1024);
+
+            GetWindowText(winHandle, caption, caption.Capacity);
+            GetClassName(winHandle, className, className.Capacity);
+            GetWindowThreadProcessId(winHandle, out uint processId);
+
+            WindowInfo info = new WindowInfo();
+            info.Handle = winHandle;
+            info.ClassName = className.ToString();
+            info.ProcessId = processId;
+            info.Process = Process.GetProcessById((int)processId);
+            if (!string.IsNullOrEmpty(caption.ToString().Trim()))
+            {
+                info.Caption = caption.ToString();
+            }
+            else
+            {
+                caption = new StringBuilder(Convert.ToInt32(SendMessage(info.Handle, WindowsMessage.WM_GETTEXTLENGTH, IntPtr.Zero, IntPtr.Zero)) + 1);
+                SendMessage(info.Handle, WindowsMessage.WM_GETTEXT, caption.Capacity, caption);
+                info.Caption = caption.ToString();
+            }
+
+            return info;
+        }
+        public static List<IntPtr> GetChildWindowHandles(IntPtr parent)
+        {
+            var result = new List<IntPtr>();
+            GCHandle listHandle = GCHandle.Alloc(result);
+            try
+            {
+                EnumWindowProc childProc = EnumWindow;
+                EnumChildWindows(parent, childProc, GCHandle.ToIntPtr(listHandle));
+            }
+            finally
+            {
+                if (listHandle.IsAllocated)
+                    listHandle.Free();
+            }
+
+            return result;
+        }
+
+        public static List<WindowInfo> GetChildWindowsInfo(WindowInfo parent)
+        {
+            var result = new List<WindowInfo>();
+            IntPtr childHandle = GetWindow(parent.Handle, GetWindowCmd.GW_CHILD);
+            while (childHandle != IntPtr.Zero)
+            {
+                WindowInfo childInfo = GetWindowInfo(childHandle);
+                childInfo.Parent = parent;
+                childInfo.ChildWindows = GetChildWindowsInfo(childInfo);
+                result.Add(childInfo);
+                childHandle = FindWindowEx(parent.Handle, childHandle, null, null);
+            }
+
+            return result;
+        }
+        public static List<WindowInfo> GetWindows()
+        {
+            IntPtr desktopWindow = GetDesktopWindow();
+            var windows = new List<WindowInfo>();
+            var winHandles = GetChildWindowHandles(desktopWindow);
+            foreach (var handle in winHandles)
+            {
+                if (IsWindowValidForCapture(handle))
+                {
+                    var info = GetWindowInfo(handle);
+                    if (!string.IsNullOrEmpty(info.Caption))
+                        windows.Add(info);
+                }
+            }
+
+            return windows;
+        }
+        public static List<MonitorInfo> GetMonitors()
         {
             var result = new List<MonitorInfo>();
 
@@ -99,7 +156,7 @@ namespace OnTopCapture.Util
                             MonitorArea = new Rect(mi.Monitor.left, mi.Monitor.top, mi.Monitor.right - mi.Monitor.left, mi.Monitor.bottom - mi.Monitor.top),
                             WorkArea = new Rect(mi.WorkArea.left, mi.WorkArea.top, mi.WorkArea.right - mi.WorkArea.left, mi.WorkArea.bottom - mi.WorkArea.top),
                             IsPrimary = mi.Flags > 0,
-                            Hmon = hMonitor,
+                            Handle = hMonitor,
                             DeviceName = mi.DeviceName
                         };
                         result.Add(info);
