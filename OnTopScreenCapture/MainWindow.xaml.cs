@@ -1,5 +1,5 @@
 ﻿using OnTopCapture.Capture;
-using Composition.WindowsRuntimeHelpers;
+using OnTopCapture.Capture.Composition;
 using System;
 using System.Linq;
 using System.Numerics;
@@ -9,8 +9,8 @@ using System.Windows.Interop;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Capture;
 using Windows.UI.Composition;
-using OnTopCapture.Util;
-using static OnTopCapture.Util.ExternalApi;
+using OnTopCapture.Utils;
+using static OnTopCapture.Utils.ExternalApi;
 using System.Windows.Media.Imaging;
 using System.Drawing;
 
@@ -24,9 +24,16 @@ namespace OnTopCapture
         private CompositionTarget TargetComposition;
         private ContainerVisual Root;
         private CaptureCompositor Compositor;
+
+        /// <summary>
+        /// Is window set on top
+        /// </summary>
         private bool mIsOnTop = false;
+
+        /// <summary>
+        /// Is capturing a window
+        /// </summary>
         private bool mIsCapturing = false;
-        private bool mIsApiAvailable = false;
         private int mLastWindowCount = 0;
         public bool IsCapturing
         {
@@ -59,9 +66,17 @@ namespace OnTopCapture
         }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            // Get windows pointer to window handle
             var interopWindow = new WindowInteropHelper(this);
-            mIsApiAvailable = ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8);
             MainWindowHandle = interopWindow.Handle;
+
+            // If required api is not present quit application
+            if (!ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
+            {
+                MessageBox.Show("Application not supported on this version of windows!", "Not supported!", MessageBoxButton.OK, MessageBoxImage.Error);
+                Environment.Exit(1);
+            }
+
             InitComposition();
             SetWindowItems(ProcessCaptureListTray);
             SetWindowItems(ProcessCaptureList);
@@ -73,6 +88,9 @@ namespace OnTopCapture
 
         private void InitComposition()
         {
+            // Create Visual layer 
+            // https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/visual-layer-in-desktop-apps
+
             // Create the compositor.
             WindowCompositor = new Compositor();
 
@@ -81,9 +99,14 @@ namespace OnTopCapture
 
             // Attach the root visual.
             Root = WindowCompositor.CreateContainerVisual();
+
+            // Visual size is relative to its parent
             Root.RelativeSizeAdjustment = Vector2.One;
+            
+            // Attach visual to window composition
             TargetComposition.Root = Root;
 
+            // Create compositor for screen capture
             Compositor = new CaptureCompositor(WindowCompositor);
             Root.Children.InsertAtTop(Compositor.Visual);
         }
@@ -101,6 +124,7 @@ namespace OnTopCapture
                 item.Click += ((s, a) => {
                     DisplayWindow.Opacity = (double)item.Tag;
                     Compositor.Opacity = (double)item.Tag;
+                    txtGuideText.Visibility = (double)item.Tag < 1.0 ? Visibility.Hidden: Visibility.Visible;
                     foreach (MenuItem opacityItem in WindowOpacity.Items)
                     {
                         opacityItem.IsChecked = (double)opacityItem.Tag == (double)((MenuItem)s).Tag;
@@ -116,40 +140,37 @@ namespace OnTopCapture
         }
         private void SetWindowItems(object rootObject)
         {
-            if (mIsApiAvailable)
-            {
-                MenuItem root = (MenuItem)rootObject;
-                var windows = WindowHelper.GetWindows();
-                if (windows.Count == mLastWindowCount)
-                    return;
+            MenuItem root = (MenuItem)rootObject;
+            var windows = WindowHelper.GetWindows();
+            if (windows.Count == mLastWindowCount)
+                return;
                 
-                // Add/Refresh menu items
-                root.Items.Clear();
-                foreach (WindowInfo window in windows)
-                {     
-                    var item = new MenuItem { Header = $"{window.Caption} ({window.Process.ProcessName} - {window.ProcessId})" };
-                    var icon = window.Process.GetIcon();
-                    if (icon is Icon)
+            // Add/Refresh menu items
+            root.Items.Clear();
+            foreach (WindowInfo window in windows)
+            {     
+                var item = new MenuItem { Header = $"{window.Caption} ({window.Process.ProcessName} - {window.ProcessId})" };
+                var icon = window.Process.GetIcon();
+                if (icon is Icon)
+                {
+                    // Sometimes we dont have access to icon, so dont add it
+                    item.Icon = new System.Windows.Controls.Image
                     {
-                        // Sometimes we dont have access to icon, so dont add it
-                        item.Icon = new System.Windows.Controls.Image
-                        {
-                            Source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())
-                        };
-                    }
+                        Source = Imaging.CreateBitmapSourceFromHIcon(icon.Handle, Int32Rect.Empty, BitmapSizeOptions.FromEmptyOptions())
+                    };
+                }
     
                   
-                    item.Click += ((s, a) => {
-                        if (IsIconic(window.Handle))
-                        {
-                            ShowWindow(window.Handle, 9); // SW_RESTORE
-                            this.Activate(); // Restore ontop app as topmost
-                        }
-                        this.StartHwndCapture(window.Handle);
-                    });
+                item.Click += ((s, a) => {
+                    if (IsIconic(window.Handle))
+                    {
+                        ShowWindow(window.Handle, 9); // SW_RESTORE
+                        this.Activate(); // Restore ontop app as topmost
+                    }
+                    this.StartHwndCapture(window.Handle);
+                });
 
-                    root.Items.Add(item);
-                }
+                root.Items.Add(item);
             }
         }
         private void StartHwndCapture(IntPtr hwnd)

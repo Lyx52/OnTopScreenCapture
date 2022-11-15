@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
 
-using Composition.WindowsRuntimeHelpers;
+using OnTopCapture.Capture.Composition;
 using System;
 using System.Numerics;
 using Windows.Graphics.Capture;
@@ -34,17 +34,36 @@ namespace OnTopCapture.Capture
     public class CaptureCompositor : IDisposable
     {
         private Compositor ContentCompositor;
+
+        /// <summary>
+        /// Root visual container, contains all visual items
+        /// </summary>
         private ContainerVisual RootContainer;
 
+        /// <summary>
+        /// Sprite that is drawn onto
+        /// </summary>
         private SpriteVisual ContentSprite;
+
+        /// <summary>
+        /// Brush that draws the content
+        /// </summary>
         private CompositionSurfaceBrush ContentBrush;
 
+        /// <summary>
+        /// Graphics device which is used to capture the frames
+        /// </summary>
         private IDirect3DDevice GraphicsDevice;
+
+        /// <summary>
+        /// Instance of screen capture
+        /// </summary>
         private ScreenCapture Capture;
 
         public CaptureCompositor(Compositor c)
         {
             ContentCompositor = c;
+            
             GraphicsDevice = Direct3D11Helper.CreateDevice();
 
             // Setup the root.
@@ -53,7 +72,11 @@ namespace OnTopCapture.Capture
 
             // Setup the content.
             ContentBrush = ContentCompositor.CreateSurfaceBrush();
+
+            // Fill the content to the visual size
             ContentBrush.Stretch = CompositionStretch.Fill;
+
+            // Create new sprite visual to draw to 
             ContentSprite = ContentCompositor.CreateSpriteVisual();
             ContentSprite.RelativeSizeAdjustment = Vector2.One;
             ContentSprite.Brush = ContentBrush;
@@ -75,16 +98,23 @@ namespace OnTopCapture.Capture
             ContentBrush.Dispose();
             GraphicsDevice.Dispose();
         }
-
+        /// <summary>
+        /// Start capturing frames from a graphics capture source
+        /// </summary>
+        /// <param name="item"></param>
         public void StartCaptureFromItem(GraphicsCaptureItem item)
         {
+            // Start capturing source graphics item
             StopCapture();
+
+            // Create screen capture instance for that specific item
             Capture = new ScreenCapture(GraphicsDevice, item);
             ContentBrush.Surface = Capture.CreateSurface(ContentCompositor);
-
             Capture.StartCapture();
         }
-
+        /// <summary>
+        /// Stop current capture
+        /// </summary>
         public void StopCapture()
         {
             Capture?.Dispose();

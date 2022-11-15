@@ -1,5 +1,8 @@
-﻿namespace OnTopCapture.Util.Enums
+﻿namespace OnTopCapture.Utils.Enums
 {
+    /// <summary>
+    /// Win32 WindowsMessage types
+    /// </summary>
     internal enum WindowsMessage
     {
         WM_GETTEXT = 0x000D,

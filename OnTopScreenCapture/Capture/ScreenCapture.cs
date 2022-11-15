@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
 
-using Composition.WindowsRuntimeHelpers;
+using OnTopCapture.Capture.Composition;
 using System;
 using Windows.Graphics;
 using Windows.Graphics.Capture;
@@ -34,21 +34,45 @@ namespace OnTopCapture.Capture
 {
     public class ScreenCapture : IDisposable
     {
+        /// <summary>
+        /// Graphics source that is being captured
+        /// </summary>
         private GraphicsCaptureItem item;
+
+        /// <summary>
+        /// Frames captured from the application
+        /// </summary>
         private Direct3D11CaptureFramePool framePool;
+
+        /// <summary>
+        /// Current screen capture session
+        /// </summary>
         private GraphicsCaptureSession session;
+
+        /// <summary>
+        /// Last known window size
+        /// </summary>
         private SizeInt32 lastSize;
 
         private IDirect3DDevice device;
+
+        /// <summary>
+        /// D3D11 graphics device instance that is bound to swapchain
+        /// </summary>
         private SharpDX.Direct3D11.Device d3dDevice;
+
+        /// <summary>
+        /// Swapchain that is used to transfer captures frames onto
+        /// </summary>
         private SharpDX.DXGI.SwapChain1 swapChain;
 
-        public ScreenCapture(IDirect3DDevice d, GraphicsCaptureItem i)
+        public ScreenCapture(IDirect3DDevice d, GraphicsCaptureItem app)
         {
-            item = i;
+            item = app;
             device = d;
             d3dDevice = Direct3D11Helper.CreateSharpDXDevice(device);
 
+            // Create swapchain that captures the application window
             var dxgiFactory = new SharpDX.DXGI.Factory2();
             var description = new SharpDX.DXGI.SwapChainDescription1()
             {
@@ -70,14 +94,17 @@ namespace OnTopCapture.Capture
             };
             swapChain = new SharpDX.DXGI.SwapChain1(dxgiFactory, d3dDevice, ref description);
 
+
+            // Create framepool
             framePool = Direct3D11CaptureFramePool.Create(
                 device,
                 DirectXPixelFormat.B8G8R8A8UIntNormalized,
                 2,
-                i.Size);
-            session = framePool.CreateCaptureSession(i);
-            lastSize = i.Size;
+                item.Size);
+            session = framePool.CreateCaptureSession(item);
+            lastSize = item.Size;
 
+            // Attach frame handler function to framepool
             framePool.FrameArrived += OnFrameArrived;
         }
 
@@ -89,19 +116,34 @@ namespace OnTopCapture.Capture
             d3dDevice?.Dispose();
         }
 
+
+        /// <summary>
+        /// Start screen capture session
+        /// </summary>
         public void StartCapture()
         {
             session.StartCapture();
         }
 
+        /// <summary>
+        /// Create capture surface that is bound to a swapchain
+        /// </summary>
+        /// <param name="compositor">Current visual compositor</param>
+        /// <returns></returns>
         public ICompositionSurface CreateSurface(Compositor compositor)
         {
             return compositor.CreateCompositionSurfaceForSwapChain(swapChain);
         }
 
+        /// <summary>
+        /// Copy frame from source to swapchain
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="args"></param>
         private void OnFrameArrived(Direct3D11CaptureFramePool sender, object args)
         {
-            var newSize = false;
+            // Window size has changed
+            var sizeChanged = false;
 
             using (var frame = sender.TryGetNextFrame())
             {
@@ -111,7 +153,7 @@ namespace OnTopCapture.Capture
                     // The thing we have been capturing has changed size.
                     // We need to resize the swap chain first, then blit the pixels.
                     // After we do that, retire the frame and then recreate the frame pool.
-                    newSize = true;
+                    sizeChanged = true;
                     lastSize = frame.ContentSize;
                     swapChain.ResizeBuffers(
                         2, 
@@ -120,7 +162,8 @@ namespace OnTopCapture.Capture
                         SharpDX.DXGI.Format.B8G8R8A8_UNorm, 
                         SharpDX.DXGI.SwapChainFlags.None);
                 }
-
+                
+                // Get frame from first framebuffer
                 using (var backBuffer = swapChain.GetBackBuffer<SharpDX.Direct3D11.Texture2D>(0))
                 using (var bitmap = Direct3D11Helper.CreateSharpDXTexture2D(frame.Surface))
                 {
@@ -129,9 +172,11 @@ namespace OnTopCapture.Capture
 
             } // Retire the frame.
 
+            
             swapChain.Present(0, SharpDX.DXGI.PresentFlags.None);
 
-            if (newSize)
+            // If size has changed we need to recreate framepool according to new size
+            if (sizeChanged)
             {
                 framePool.Recreate(
                     device,

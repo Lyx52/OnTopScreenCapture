@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-using OnTopCapture.Util.Enums;
-namespace OnTopCapture.Util
+using OnTopCapture.Utils.Enums;
+namespace OnTopCapture.Utils
 {
+    /// <summary>
+    /// Static function class to call various imported functions from windows dll's
+    /// </summary>
     internal static class ExternalApi
     {
         public delegate bool EnumMonitorsDelegate(IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData);
@@ -32,9 +35,9 @@ namespace OnTopCapture.Util
 
         private const int CCHDEVICENAME = 32;
 
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         public static extern bool ShowWindow(IntPtr handle, int nCmdShow);
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         public static extern bool IsIconic(IntPtr handle);
         [DllImport("user32.dll")]
         public static extern IntPtr GetShellWindow();
@@ -68,13 +71,13 @@ namespace OnTopCapture.Util
         [DllImport("user32.dll")]
         public static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
 
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hwnd, WindowsMessage wmConstant, IntPtr wParam, IntPtr lParam);
 
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern int GetClassName(IntPtr hWnd, StringBuilder className, int charCount);
 
-        [DllImport("User32.dll")]
+        [DllImport("user32.dll")]
         public static extern int SendMessage(IntPtr hwnd, WindowsMessage wmConstant, int wParam, StringBuilder sb);
 
         [DllImport("user32.dll", EntryPoint = "FindWindowEx", CharSet = CharSet.Auto)]
@@ -87,7 +90,7 @@ namespace OnTopCapture.Util
         [DllImport("user32.dll", SetLastError = true)]
         public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
-        [DllImport("Kernel32.dll")]
+        [DllImport("kernel32.dll")]
         public static extern uint QueryFullProcessImageName(IntPtr hProcess, uint dwFlags, StringBuilder lpExeName, ref uint lpdwSize);
 
         public static bool EnumWindow(IntPtr handle, IntPtr pointer)

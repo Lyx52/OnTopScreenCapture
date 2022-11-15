@@ -4,8 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace OnTopCapture.Util.Enums
+namespace OnTopCapture.Utils.Enums
 {
+    /// <summary>
+    /// Win32 API Desktop Window Manager window attributes
+    /// </summary>
     enum DWMWindowAttribute : uint
     {
         NCRenderingEnabled = 1,

@@ -29,7 +29,7 @@
                     </ContextMenu>
                 </Rectangle.ContextMenu>
             </Rectangle>
-        <TextBlock TextAlignment="Center" IsHitTestVisible="False" VerticalAlignment="Center" Text="Right-Click to open context menu" />
+        <TextBlock Name="txtGuideText" Visibility="Visible" TextAlignment="Center" IsHitTestVisible="False" VerticalAlignment="Center" Text="Right-Click to open context menu" />
         <tb:TaskbarIcon
             IconSource="AppIcon.ico">
             <tb:TaskbarIcon.ContextMenu>

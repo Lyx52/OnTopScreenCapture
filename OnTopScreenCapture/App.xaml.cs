@@ -22,7 +22,7 @@
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
 
-using Composition.WindowsRuntimeHelpers;
+using OnTopCapture.Capture.Composition;
 using System.Windows;
 using Windows.System;
 

@@ -1,7 +1,10 @@
 ﻿using System;
 
-namespace OnTopCapture.Util.Enums
+namespace OnTopCapture.Utils.Enums
 {
+    /// <summary>
+    /// Win32 Window styles
+    /// </summary>
     [Flags]
     internal enum WindowStyles : uint
     {

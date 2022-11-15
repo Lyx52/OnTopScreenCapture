@@ -6,11 +6,18 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
-using static OnTopCapture.Util.ExternalApi;
-namespace OnTopCapture.Util
+using static OnTopCapture.Utils.ExternalApi;
+namespace OnTopCapture.Utils
 {
+
     internal static class ProcessExtensions
     {
+        /// <summary>
+        /// Get the main module name/executable name
+        /// </summary>
+        /// <param name="process">Process ModuleName belongs to</param>
+        /// <param name="buffer">Size of buffer to allocate default is 1024</param>
+        /// <returns></returns>
         public static string GetMainModuleFileName(this Process process, int buffer = 1024)
         {
             var fileNameBuilder = new StringBuilder(buffer);
@@ -19,7 +26,11 @@ namespace OnTopCapture.Util
                 fileNameBuilder.ToString() :
                 null;
         }
-
+        /// <summary>
+        /// Extract icon from a process
+        /// </summary>
+        /// <param name="process">Process icon belongs to</param>
+        /// <returns></returns>
         public static Icon GetIcon(this Process process)
         {
             try

@@ -1,5 +1,8 @@
-﻿namespace OnTopCapture.Util.Enums
+﻿namespace OnTopCapture.Utils.Enums
 {
+    /// <summary>
+    /// Win32 ancestor window flags
+    /// </summary>
     internal enum GetAncestorFlags : int
     {
         // Retrieves the parent window. This does not include the owner, as it does with the GetParent function.

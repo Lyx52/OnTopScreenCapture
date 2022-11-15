@@ -1,5 +1,8 @@
-﻿namespace OnTopCapture.Util.Enums
+﻿namespace OnTopCapture.Utils.Enums
 {
+    /// <summary>
+    /// Win32 GetWindow commands
+    /// </summary>
     internal enum GetWindowCmd : uint
     {
         GW_HWNDFIRST = 0,

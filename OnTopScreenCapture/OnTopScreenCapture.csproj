@@ -92,18 +92,22 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Capture\CaptureCompositor.cs" />
+    <Compile Include="Capture\Composition\CaptureHelper.cs" />
+    <Compile Include="Capture\Composition\CompositionHelper.cs" />
+    <Compile Include="Capture\Composition\CoreMessagingHelper.cs" />
+    <Compile Include="Capture\Composition\Direct3D11Helper.cs" />
     <Compile Include="Capture\ScreenCapture.cs" />
-    <Compile Include="Util\Enums\DWMWindowAttribute.cs" />
-    <Compile Include="Util\Enums\GetAncestorFlags.cs" />
-    <Compile Include="Util\Enums\GetWindowCmd.cs" />
-    <Compile Include="Util\Enums\GWL.cs" />
-    <Compile Include="Util\Enums\WindowsMessage.cs" />
-    <Compile Include="Util\Enums\WindowStyle.cs" />
-    <Compile Include="Util\ExternalFuncApi.cs" />
-    <Compile Include="Util\MonitorInfo.cs" />
-    <Compile Include="Util\ProcessExtensions.cs" />
-    <Compile Include="Util\WindowHelper.cs" />
-    <Compile Include="Util\WindowInfo.cs" />
+    <Compile Include="Utils\Enums\DWMWindowAttribute.cs" />
+    <Compile Include="Utils\Enums\GetAncestorFlags.cs" />
+    <Compile Include="Utils\Enums\GetWindowCmd.cs" />
+    <Compile Include="Utils\Enums\GWL.cs" />
+    <Compile Include="Utils\Enums\WindowsMessage.cs" />
+    <Compile Include="Utils\Enums\WindowStyle.cs" />
+    <Compile Include="Utils\ExternalFuncApi.cs" />
+    <Compile Include="Utils\MonitorInfo.cs" />
+    <Compile Include="Utils\ProcessExtensions.cs" />
+    <Compile Include="Utils\WindowHelper.cs" />
+    <Compile Include="Utils\WindowInfo.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -144,12 +148,6 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Composition.WindowsRuntimeHelpers\Composition.WindowsRuntimeHelpers.csproj">
-      <Project>{ec969287-3d35-410a-806c-0baaa7564911}</Project>
-      <Name>Composition.WindowsRuntimeHelpers</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
     <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2002-preview" />
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
@@ -170,5 +168,6 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

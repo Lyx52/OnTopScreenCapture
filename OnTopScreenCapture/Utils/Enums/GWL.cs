@@ -1,5 +1,8 @@
-﻿namespace OnTopCapture.Util.Enums
+﻿namespace OnTopCapture.Utils.Enums
 {
+    /// <summary>
+    /// Win32 GetWindowLong function offset to retrieve specific value
+    /// </summary>
     internal enum GWL : int
     {
         GWL_WNDPROC = (-4),

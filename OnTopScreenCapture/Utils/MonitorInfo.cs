@@ -2,9 +2,12 @@
 using System.Numerics;
 using Windows.Foundation;
 
-namespace OnTopCapture.Util
+namespace OnTopCapture.Utils
 {
-    internal class MonitorInfo
+    /// <summary>
+    /// Class that contains info about a monitor
+    /// </summary>
+    internal sealed class MonitorInfo
     {
         public bool IsPrimary { get; set; }
         public Vector2 ScreenSize { get; set; }

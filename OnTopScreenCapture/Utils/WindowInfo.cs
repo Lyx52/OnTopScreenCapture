@@ -2,9 +2,12 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 
-namespace OnTopCapture.Util
+namespace OnTopCapture.Utils
 {
-    internal class WindowInfo
+    /// <summary>
+    /// Class that contains info about a currently opened window
+    /// </summary>
+    internal sealed class WindowInfo
     {
         public List<WindowInfo> ChildWindows = new List<WindowInfo>();
 
