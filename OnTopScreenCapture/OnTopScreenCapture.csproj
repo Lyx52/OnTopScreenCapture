@@ -91,12 +91,20 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AreaSelectionWindow.xaml.cs">
+      <DependentUpon>AreaSelectionWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Capture\CaptureArea.cs" />
     <Compile Include="Capture\CaptureCompositor.cs" />
     <Compile Include="Capture\Composition\CaptureHelper.cs" />
     <Compile Include="Capture\Composition\CompositionHelper.cs" />
     <Compile Include="Capture\Composition\CoreMessagingHelper.cs" />
     <Compile Include="Capture\Composition\Direct3D11Helper.cs" />
     <Compile Include="Capture\ScreenCapture.cs" />
+    <Compile Include="SettingsWindow.xaml.cs">
+      <DependentUpon>SettingsWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Utils\AppSettings.cs" />
     <Compile Include="Utils\Enums\DWMWindowAttribute.cs" />
     <Compile Include="Utils\Enums\GetAncestorFlags.cs" />
     <Compile Include="Utils\Enums\GetWindowCmd.cs" />
@@ -106,8 +114,13 @@
     <Compile Include="Utils\ExternalFuncApi.cs" />
     <Compile Include="Utils\MonitorInfo.cs" />
     <Compile Include="Utils\ProcessExtensions.cs" />
+    <Compile Include="SelectionBackElement.cs" />
     <Compile Include="Utils\WindowHelper.cs" />
     <Compile Include="Utils\WindowInfo.cs" />
+    <Page Include="AreaSelectionWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -120,6 +133,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="SettingsWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">
@@ -149,7 +166,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.18362.2002-preview" />
+    <PackageReference Include="Microsoft.Windows.SDK.Contracts" Version="10.0.22621.755" />
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>13.0.1</Version>
+    </PackageReference>
     <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
     <PackageReference Include="SharpDX.Direct3D11" Version="4.2.0" />
   </ItemGroup>

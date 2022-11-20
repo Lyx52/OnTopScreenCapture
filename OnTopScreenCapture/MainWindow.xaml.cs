@@ -13,6 +13,10 @@ using OnTopCapture.Utils;
 using static OnTopCapture.Utils.ExternalApi;
 using System.Windows.Media.Imaging;
 using System.Drawing;
+using System.IO;
+using Newtonsoft.Json;
+using OnTopCapture.Properties;
+using SharpDX.DXGI;
 
 namespace OnTopCapture
 {
@@ -20,10 +24,18 @@ namespace OnTopCapture
     public partial class MainWindow : Window
     {
         public static IntPtr MainWindowHandle;
-        private Compositor WindowCompositor;
-        private CompositionTarget TargetComposition;
-        private ContainerVisual Root;
-        private CaptureCompositor Compositor;
+        private Compositor mWindowCompositor;
+        private CompositionTarget mTargetComposition;
+        private ContainerVisual mRoot;
+        private CaptureCompositor mCompositor;
+        private SettingsWindow mSettingsWindow;
+        public string SettingsFilePath = string.Empty;
+        public static AppSettings Settings;
+        public static MonitorInfo PrimaryMonitor { get; set; }
+        /// <summary>
+        /// Currently captured area of primary monitor
+        /// </summary>
+        public CaptureArea CurrentCaptureArea { get; set; } = null;
 
         /// <summary>
         /// Is window set on top
@@ -64,6 +76,38 @@ namespace OnTopCapture
         {
             InitializeComponent();
         }
+        private void SaveSettings(AppSettings settings)
+        {
+            using (StreamWriter fs = new StreamWriter(File.Open(SettingsFilePath, FileMode.Create)))
+            {
+                fs.Write(JsonConvert.SerializeObject(settings, Formatting.Indented));
+                fs.Close();
+            }
+        }
+        private AppSettings LoadSettings(bool createNew = false)
+        {
+            var output = new AppSettings();
+            SettingsFilePath = Path.Combine(Directory.GetCurrentDirectory(), "settings.json");
+            if (!File.Exists(SettingsFilePath) || createNew)
+            {
+                SaveSettings(output);
+                return output;
+            }
+
+            try
+            {
+                using (StreamReader fs = new StreamReader(File.OpenRead(SettingsFilePath)))
+                {
+                    output = JsonConvert.DeserializeObject<AppSettings>(fs.ReadToEnd());
+                    fs.Close();
+                }
+            }
+            catch (JsonReaderException _)
+            {
+                return LoadSettings(true);
+            }
+            return output;
+        }
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             // Get windows pointer to window handle
@@ -78,12 +122,19 @@ namespace OnTopCapture
             }
 
             InitComposition();
+            
+            // Load settings
+            Settings = LoadSettings();
+            IsOnTop = Settings.IsOnTopByDefault;
+            SetOpacity(Settings.DefaultOpacity / 100.0D);
+            PrimaryMonitor = WindowHelper.GetMonitors().Where((mon) => mon.IsPrimary).First();
+
             SetWindowItems(ProcessCaptureListTray);
             SetWindowItems(ProcessCaptureList);
             SetOpacityItems(WindowOpacity);
             SetOpacityItems(WindowOpacityTray);
-
-
+            SetSavedAreas(SavedAreasList);
+            SetSavedAreas(SavedAreasListTray);
         }
 
         private void InitComposition()
@@ -92,23 +143,22 @@ namespace OnTopCapture
             // https://learn.microsoft.com/en-us/windows/apps/desktop/modernize/visual-layer-in-desktop-apps
 
             // Create the compositor.
-            WindowCompositor = new Compositor();
+            mWindowCompositor = new Compositor();
 
             // Create a target for the window.
-            TargetComposition = WindowCompositor.CreateDesktopWindowTarget(MainWindowHandle, true);
+            mTargetComposition = mWindowCompositor.CreateDesktopWindowTarget(MainWindowHandle, true);
 
             // Attach the root visual.
-            Root = WindowCompositor.CreateContainerVisual();
-
+            mRoot = mWindowCompositor.CreateContainerVisual();
             // Visual size is relative to its parent
-            Root.RelativeSizeAdjustment = Vector2.One;
+            mRoot.RelativeSizeAdjustment = Vector2.One;
             
             // Attach visual to window composition
-            TargetComposition.Root = Root;
+            mTargetComposition.Root = mRoot;
 
             // Create compositor for screen capture
-            Compositor = new CaptureCompositor(WindowCompositor);
-            Root.Children.InsertAtTop(Compositor.Visual);
+            mCompositor = new CaptureCompositor(mWindowCompositor, this.RenderSize);
+            mRoot.Children.InsertAtTop(mCompositor.Visual);
         }
         private void SetOpacityItems(object itemList)
         {
@@ -120,11 +170,9 @@ namespace OnTopCapture
                 // Create opacity menu item and click event
                 var item = new MenuItem { Header = $"Opacity {opacity}%" };
                 item.Tag = (double)opacity / 100.0f;
-                item.IsChecked = opacity == 100;
+                item.IsChecked = opacity == Settings.DefaultOpacity;
                 item.Click += ((s, a) => {
-                    DisplayWindow.Opacity = (double)item.Tag;
-                    Compositor.Opacity = (double)item.Tag;
-                    txtGuideText.Visibility = (double)item.Tag < 1.0 ? Visibility.Hidden: Visibility.Visible;
+                    SetOpacity((double)item.Tag);
                     foreach (MenuItem opacityItem in WindowOpacity.Items)
                     {
                         opacityItem.IsChecked = (double)opacityItem.Tag == (double)((MenuItem)s).Tag;
@@ -137,6 +185,12 @@ namespace OnTopCapture
 
                 list.Items.Add(item);
             }
+        }
+        public void SetOpacity(double opacity)
+        {
+            DisplayWindow.Opacity = opacity;
+            mCompositor.Opacity = opacity;
+            txtGuideText.Visibility = opacity < 1.0 && !Settings.IsHelpTextVisibleAlways ? Visibility.Hidden : Visibility.Visible;
         }
         private void SetWindowItems(object rootObject)
         {
@@ -173,38 +227,58 @@ namespace OnTopCapture
                 root.Items.Add(item);
             }
         }
+
+        private void SetSavedAreas(object itemList)
+        {
+            MenuItem list = (MenuItem)itemList;
+
+            // Setup saved areas context menu
+            int i = 0;
+            list.Items.Clear();
+            foreach (var area in Settings.SavedAreas)
+            {
+                var item = new MenuItem { Header = $"{++i} - ({ area.XOffset }, { area.YOffset }, { area.Width }, { area.Height })" };
+                item.Click += ((s, a) => {
+                    this.StartPrimaryMonitorCapture(area);
+                });
+
+                list.Items.Add(item);
+            }
+        }
         private void StartHwndCapture(IntPtr hwnd)
         {
             WindowHelper.SetWindowExTransparent(MainWindowHandle, true);
             GraphicsCaptureItem item = CaptureHelper.CreateItemForWindow(hwnd);
             if (item != null)
             {
-                Compositor.StartCaptureFromItem(item);
+                mCompositor.StartCaptureFromItem(item);
                 this.IsCapturing = true;
             }
         }
 
-        private void StartHmonCapture(IntPtr hmon)
+        private void StartHmonCapture(IntPtr hmon, CaptureArea area = null)
         {
             WindowHelper.SetWindowExTransparent(MainWindowHandle, true);
             GraphicsCaptureItem item = CaptureHelper.CreateItemForMonitor(hmon);
             if (item != null)
             {
-                Compositor.StartCaptureFromItem(item);
+                mCompositor.StartCaptureFromItem(item, area);
+                this.IsCapturing = true;
             }
         }
 
-        private void StartPrimaryMonitorCapture()
+        private void StartPrimaryMonitorCapture(CaptureArea area = null)
         {
-            MonitorInfo monitor = WindowHelper.GetMonitors().Where((mon) => mon.IsPrimary).First();
-            StartHmonCapture(monitor.Handle);
+            CurrentCaptureArea = area;
+            StartHmonCapture(PrimaryMonitor.Handle, CurrentCaptureArea);
         }
 
         private void StopCapture()
         {
             WindowHelper.SetWindowExTransparent(MainWindowHandle, false);
             this.IsCapturing = false;
-            Compositor.StopCapture();
+            CurrentCaptureArea = null;
+            mCompositor.StopCapture();
         }
         private void ProcessList_Click(object sender, RoutedEventArgs e)
         {
@@ -229,6 +303,31 @@ namespace OnTopCapture
         private void StopCapturing_Click(object sender, RoutedEventArgs e)
         {
             this.StopCapture();
+        }
+
+        private void SettingsWindowOpen_Click(object sender, RoutedEventArgs e)
+        {
+            mSettingsWindow = new SettingsWindow();
+            mSettingsWindow.ShowActivated = true;
+            mSettingsWindow.Closed += SettingsWindow_Closed; 
+            mSettingsWindow.Show();
+            IsOnTop = false;
+            mSettingsWindow.Activate();
+        }
+        private void SettingsWindow_Closed(object sender, EventArgs e)
+        {
+            SaveSettings(Settings);
+        }
+
+        private void DisplayWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (mCompositor is CaptureCompositor)
+                mCompositor.SetWindowSize(e.NewSize);
+        }
+
+        private void SavedAreasList_MouseEnter(object sender, System.Windows.Input.MouseEventArgs e)
+        {
+            SetSavedAreas(sender);
         }
     }
 }

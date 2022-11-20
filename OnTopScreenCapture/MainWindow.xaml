@@ -9,7 +9,7 @@
         Title="Capture" Height="450" Width="800"
         Loaded="Window_Loaded"
         WindowStyle="None"
-        AllowsTransparency="True">
+        AllowsTransparency="True" SizeChanged="DisplayWindow_SizeChanged">
     <WindowChrome.WindowChrome>
         <WindowChrome GlassFrameThickness="0,0,0,1" CornerRadius="0" />
     </WindowChrome.WindowChrome>
@@ -23,10 +23,12 @@
                         <MenuItem Name="ExitButton" Header="Exit Application" Click="Exit_Click" />
                         <MenuItem Name="WindowOnTopButton" Header="Window on top" IsCheckable="True" Click="WindowOnTop_Click"/>
                         <MenuItem Name="WindowOpacity" Header="Opacity" />
+                        <MenuItem Name="SettingsWindowOpen" Header="Settings" Click="SettingsWindowOpen_Click"/>
                         <Separator />
                         <MenuItem Name="PrimaryMonitorCaptureButton" Header="Start Capturing PrimaryMonitor.." Click="PrimaryMonitorCapture_Click" />
                         <MenuItem Name="ProcessCaptureList" Header="Start Capturing a process.." MouseEnter="ProcessList_Click"/>
-                    </ContextMenu>
+                    <MenuItem Name="SavedAreasList" Header="Start Capturing Preset Area" MouseEnter="SavedAreasList_MouseEnter" />
+                </ContextMenu>
                 </Rectangle.ContextMenu>
             </Rectangle>
         <TextBlock Name="txtGuideText" Visibility="Visible" TextAlignment="Center" IsHitTestVisible="False" VerticalAlignment="Center" Text="Right-Click to open context menu" />
@@ -37,10 +39,12 @@
                     <MenuItem Name="ExitButtonTray" Header="Exit Application" Click="Exit_Click" />
                     <MenuItem Name="WindowOnTopButtonTray" Header="Window on top" IsCheckable="True" Click="WindowOnTop_Click"/>
                     <MenuItem Name="WindowOpacityTray" Header="Opacity" />
+                    <MenuItem Name="SettingsWindowOpenTray" Header="Settings" Click="SettingsWindowOpen_Click"/>
                     <MenuItem IsEnabled="False" Name="StopCaptureButtonTray" Header="Stop Capturing" Click="StopCapturing_Click" />
                     <Separator />
                     <MenuItem Name="PrimaryMonitorCaptureButtonTray" Header="Start Capturing PrimaryMonitor.." Click="PrimaryMonitorCapture_Click" />
                     <MenuItem Name="ProcessCaptureListTray" Header="Start Capturing a process.." MouseEnter="ProcessList_Click"/>
+                    <MenuItem Name="SavedAreasListTray" Header="Start Capturing Preset Area" MouseEnter="SavedAreasList_MouseEnter" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>

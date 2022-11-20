@@ -24,11 +24,17 @@
 
 using OnTopCapture.Capture.Composition;
 using System;
+using System.Diagnostics;
+using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Numerics;
+using System.Security.Policy;
 using Windows.Graphics.Capture;
 using Windows.Graphics.DirectX.Direct3D11;
+using Windows.Services.Maps;
 using Windows.UI.Composition;
-
+using Windows.UI.Xaml.Media;
+using Size = System.Windows.Size;
 namespace OnTopCapture.Capture
 {
     public class CaptureCompositor : IDisposable
@@ -59,11 +65,15 @@ namespace OnTopCapture.Capture
         /// Instance of screen capture
         /// </summary>
         private ScreenCapture Capture;
+        
+        private Size WindowSize { get; set; }
+        private Size LastItemSize { get; set; }
+        private CaptureArea CurrentCaptureArea { get; set; } = null;
 
-        public CaptureCompositor(Compositor c)
+        public CaptureCompositor(Compositor c, Size windowSize)
         {
+            WindowSize = windowSize;
             ContentCompositor = c;
-            
             GraphicsDevice = Direct3D11Helper.CreateDevice();
 
             // Setup the root.
@@ -102,23 +112,62 @@ namespace OnTopCapture.Capture
         /// Start capturing frames from a graphics capture source
         /// </summary>
         /// <param name="item"></param>
-        public void StartCaptureFromItem(GraphicsCaptureItem item)
+        public void StartCaptureFromItem(GraphicsCaptureItem item, CaptureArea area = null)
         {
             // Start capturing source graphics item
             StopCapture();
 
             // Create screen capture instance for that specific item
-            Capture = new ScreenCapture(GraphicsDevice, item);
+            Capture = new ScreenCapture(GraphicsDevice, item, area);
             ContentBrush.Surface = Capture.CreateSurface(ContentCompositor);
+
+            // Clip content
+            CurrentCaptureArea = area;
+            LastItemSize = new Size(item.Size.Width, item.Size.Height);
+            SetAreaClip(CurrentCaptureArea, LastItemSize);
             Capture.StartCapture();
         }
+
+        public void SetAreaClip(CaptureArea area, Size sourceSize)
+        {
+            if (area is CaptureArea)
+            {
+                // Relative start X/Y scaled to capture window size
+                var relLeft = (double)area.XOffset / sourceSize.Width;
+                var relTop = (double)area.YOffset / sourceSize.Height;
+                var relSX = (int)(WindowSize.Width * relLeft);
+                var relSY = (int)(WindowSize.Height * relTop);
+
+                // Relative end X/Y scaled to capture window size
+                var relRight = (double)(area.XOffset + area.Width) / sourceSize.Width;
+                var relBottom = (double)(area.YOffset + area.Height) / sourceSize.Height;
+                var relEX = (int)(WindowSize.Width - (WindowSize.Width * relRight));
+                var relEY = (int)(WindowSize.Height - (WindowSize.Height * relBottom));
+
+                // Negative offset to hide the start x/y clip
+                ContentSprite.Offset = new Vector3(-relSX, -relSY, 0);
+
+                // Size to end + start relative to window size + 1
+                ContentSprite.RelativeSizeAdjustment = new Vector2(1f + ((float)(relEX + relSX) / (float)WindowSize.Width), 1f + ((float)(relEY + relSX) / (float)WindowSize.Height));
+
+                // Clip source content
+                ContentSprite.Clip = ContentCompositor.CreateInsetClip(relSX, relSY, relEX, relEY);
+            }
+        }
+
         /// <summary>
         /// Stop current capture
         /// </summary>
         public void StopCapture()
         {
+            CurrentCaptureArea = null;
             Capture?.Dispose();
             ContentBrush.Surface = null;
+        }
+        public void SetWindowSize(Size windowSize)
+        {
+            WindowSize = windowSize;
+            SetAreaClip(CurrentCaptureArea, LastItemSize);
         }
     }
 }

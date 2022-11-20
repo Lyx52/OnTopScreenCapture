@@ -7,7 +7,7 @@ namespace OnTopCapture.Utils
     /// <summary>
     /// Class that contains info about a monitor
     /// </summary>
-    internal sealed class MonitorInfo
+    public sealed class MonitorInfo
     {
         public bool IsPrimary { get; set; }
         public Vector2 ScreenSize { get; set; }

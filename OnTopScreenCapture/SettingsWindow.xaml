@@ -1,0 +1,44 @@
+﻿<Window x:Class="OnTopCapture.SettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OnTopCapture"
+        mc:Ignorable="d"
+        Title="Settings" Height="400" Width="300" FontSize="16" ResizeMode="NoResize" Closing="Window_Closing">
+    <StackPanel Margin="5 5">
+        <Label Margin="0 5">Default Opacity</Label>
+        <ComboBox Name="cboxOpacityValues"  ItemsSource="{Binding OpacityValues}" SelectedItem="{Binding CurrentOpacityValue, Mode=TwoWay}"/>
+        <CheckBox Name="chboxIsByDefaultOnTop" Margin="0 10" IsChecked="{Binding IsOnTopValue, Mode=TwoWay}" VerticalAlignment="Center" VerticalContentAlignment="Center">
+            <TextBlock Text="Window by default is on top" VerticalAlignment="Center" />
+        </CheckBox>
+        <CheckBox Name="chboxIsHelperAlwaysVisible" Margin="0 10" IsChecked="{Binding HelpTextAlwaysVisible, Mode=TwoWay}" VerticalAlignment="Center" VerticalContentAlignment="Center">
+            <TextBlock Text="'Right-Click...' text always visible" VerticalAlignment="Center" />
+        </CheckBox>
+        <Label Margin="0 10">Preset capture areas</Label>
+        <ListBox Name="lstBoxPresetAreas" Height="100" ItemsSource="{Binding CaptureAreas}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock>
+                        <TextBlock.Text>
+                            <MultiBinding StringFormat="{}({0}, {1}, {2}, {3})">
+                                <Binding Path="XOffset" />
+                                <Binding Path="YOffset" />
+                                <Binding Path="Width" />
+                                <Binding Path="Height" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.5*"/>
+                <ColumnDefinition Width="0.5*"/>
+            </Grid.ColumnDefinitions>
+            <Button Name="btnRemoveArea" Grid.Column="0" Click="btnRemoveArea_Click">Remove</Button>
+            <Button Name="btnAddArea" Grid.Column="1" Click="btnAddArea_Click">Add</Button>
+        </Grid>
+    </StackPanel>
+</Window>

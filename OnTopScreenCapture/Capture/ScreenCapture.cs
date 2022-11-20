@@ -23,6 +23,7 @@
 //  ---------------------------------------------------------------------------------
 
 using OnTopCapture.Capture.Composition;
+using SharpDX.DXGI;
 using System;
 using Windows.Graphics;
 using Windows.Graphics.Capture;
@@ -66,13 +67,13 @@ namespace OnTopCapture.Capture
         /// </summary>
         private SharpDX.DXGI.SwapChain1 swapChain;
 
-        public ScreenCapture(IDirect3DDevice d, GraphicsCaptureItem app)
+        public ScreenCapture(IDirect3DDevice d, GraphicsCaptureItem app, CaptureArea area)
         {
             item = app;
             device = d;
             d3dDevice = Direct3D11Helper.CreateSharpDXDevice(device);
 
-            // Create swapchain that captures the application window
+            // Create swapchain that captures the application window or primary screen
             var dxgiFactory = new SharpDX.DXGI.Factory2();
             var description = new SharpDX.DXGI.SwapChainDescription1()
             {
@@ -93,7 +94,6 @@ namespace OnTopCapture.Capture
                 Flags = SharpDX.DXGI.SwapChainFlags.None
             };
             swapChain = new SharpDX.DXGI.SwapChain1(dxgiFactory, d3dDevice, ref description);
-
 
             // Create framepool
             framePool = Direct3D11CaptureFramePool.Create(
@@ -172,9 +172,7 @@ namespace OnTopCapture.Capture
 
             } // Retire the frame.
 
-            
             swapChain.Present(0, SharpDX.DXGI.PresentFlags.None);
-
             // If size has changed we need to recreate framepool according to new size
             if (sizeChanged)
             {
