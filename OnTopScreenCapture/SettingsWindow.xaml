@@ -9,6 +9,9 @@
     <StackPanel Margin="5 5">
         <Label Margin="0 5">Default Opacity</Label>
         <ComboBox Name="cboxOpacityValues"  ItemsSource="{Binding OpacityValues}" SelectedItem="{Binding CurrentOpacityValue, Mode=TwoWay}"/>
+        <CheckBox Name="chboxIsCursorCaptureEnabled" Margin="0 10" IsChecked="{Binding CaptureCursor, Mode=TwoWay}" VerticalAlignment="Center" VerticalContentAlignment="Center">
+            <TextBlock Text="Cursor is captured" VerticalAlignment="Center" />
+        </CheckBox>
         <CheckBox Name="chboxIsByDefaultOnTop" Margin="0 10" IsChecked="{Binding IsOnTopValue, Mode=TwoWay}" VerticalAlignment="Center" VerticalContentAlignment="Center">
             <TextBlock Text="Window by default is on top" VerticalAlignment="Center" />
         </CheckBox>

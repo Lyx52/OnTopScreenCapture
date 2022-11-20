@@ -12,6 +12,7 @@ namespace OnTopCapture.Utils
         public int DefaultOpacity { get; set; } = 100;
         public bool IsOnTopByDefault { get; set; } = false;
         public bool IsHelpTextVisibleAlways { get; set; } = false;
+        public bool IsCursorCapturingEnabled { get; set; } = false;
         public List<CaptureArea> SavedAreas { get; set; } = new List<CaptureArea>();
     }
 }

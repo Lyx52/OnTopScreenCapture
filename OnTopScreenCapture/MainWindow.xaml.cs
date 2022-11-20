@@ -251,7 +251,7 @@ namespace OnTopCapture
             GraphicsCaptureItem item = CaptureHelper.CreateItemForWindow(hwnd);
             if (item != null)
             {
-                mCompositor.StartCaptureFromItem(item);
+                mCompositor.StartCaptureFromItem(item, captureCursor: Settings.IsCursorCapturingEnabled);
                 this.IsCapturing = true;
             }
         }
@@ -262,7 +262,7 @@ namespace OnTopCapture
             GraphicsCaptureItem item = CaptureHelper.CreateItemForMonitor(hmon);
             if (item != null)
             {
-                mCompositor.StartCaptureFromItem(item, area);
+                mCompositor.StartCaptureFromItem(item, area: area, captureCursor: Settings.IsCursorCapturingEnabled);
                 this.IsCapturing = true;
             }
         }
@@ -307,6 +307,7 @@ namespace OnTopCapture
 
         private void SettingsWindowOpen_Click(object sender, RoutedEventArgs e)
         {
+            StopCapture();
             mSettingsWindow = new SettingsWindow();
             mSettingsWindow.ShowActivated = true;
             mSettingsWindow.Closed += SettingsWindow_Closed; 

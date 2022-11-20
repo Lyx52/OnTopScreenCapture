@@ -62,6 +62,11 @@ namespace OnTopCapture
                 get => Settings.IsHelpTextVisibleAlways;
                 set => Settings.IsHelpTextVisibleAlways = value;
             }
+            public bool CaptureCursor
+            {
+                get => Settings.IsCursorCapturingEnabled;
+                set => Settings.IsCursorCapturingEnabled = value;
+            }
             public ObservableCollection<CaptureArea> CaptureAreas { get; set; }
             public AppSettings Settings { get; set; }
         }

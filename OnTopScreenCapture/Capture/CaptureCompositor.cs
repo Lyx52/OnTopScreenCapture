@@ -114,7 +114,7 @@ namespace OnTopCapture.Capture
         /// Start capturing frames from a graphics capture source
         /// </summary>
         /// <param name="item"></param>
-        public void StartCaptureFromItem(GraphicsCaptureItem item, CaptureArea area = null)
+        public void StartCaptureFromItem(GraphicsCaptureItem item, CaptureArea area = null, bool captureCursor = false)
         {
             // Start capturing source graphics item
             StopCapture();
@@ -127,7 +127,7 @@ namespace OnTopCapture.Capture
             CurrentCaptureArea = area;
             LastItemSize = new Size(item.Size.Width, item.Size.Height);
             SetAreaClip(CurrentCaptureArea, LastItemSize);
-            Capture.StartCapture();
+            Capture.StartCapture(captureCursor);
         }
 
         public void SetAreaClip(CaptureArea area, Size sourceSize)

@@ -48,7 +48,7 @@ namespace OnTopCapture.Capture
         /// <summary>
         /// Current screen capture session
         /// </summary>
-        private GraphicsCaptureSession session;
+        private GraphicsCaptureSession CaptureSession;
 
         /// <summary>
         /// Last known window size
@@ -94,23 +94,25 @@ namespace OnTopCapture.Capture
                 Flags = SharpDX.DXGI.SwapChainFlags.None
             };
             swapChain = new SharpDX.DXGI.SwapChain1(dxgiFactory, d3dDevice, ref description);
-
+            
             // Create framepool
             framePool = Direct3D11CaptureFramePool.Create(
                 device,
                 DirectXPixelFormat.B8G8R8A8UIntNormalized,
                 2,
                 item.Size);
-            session = framePool.CreateCaptureSession(item);
+            CaptureSession = framePool.CreateCaptureSession(item);
+
             lastSize = item.Size;
 
             // Attach frame handler function to framepool
             framePool.FrameArrived += OnFrameArrived;
+           
         }
 
         public void Dispose()
         {
-            session?.Dispose();
+            CaptureSession?.Dispose();
             framePool?.Dispose();
             swapChain?.Dispose();
             d3dDevice?.Dispose();
@@ -120,9 +122,10 @@ namespace OnTopCapture.Capture
         /// <summary>
         /// Start screen capture session
         /// </summary>
-        public void StartCapture()
+        public void StartCapture(bool captureCursor = false)
         {
-            session.StartCapture();
+            CaptureSession.IsCursorCaptureEnabled = captureCursor;
+            CaptureSession.StartCapture();
         }
 
         /// <summary>
