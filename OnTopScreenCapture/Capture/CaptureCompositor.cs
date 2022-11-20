@@ -18,7 +18,8 @@
 //  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 //  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 //  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+//  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN+
+
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
 
@@ -29,6 +30,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Numerics;
 using System.Security.Policy;
+using System.Windows;
 using Windows.Graphics.Capture;
 using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Services.Maps;
@@ -132,26 +134,16 @@ namespace OnTopCapture.Capture
         {
             if (area is CaptureArea)
             {
-                // Relative start X/Y scaled to capture window size
-                var relLeft = (double)area.XOffset / sourceSize.Width;
-                var relTop = (double)area.YOffset / sourceSize.Height;
-                var relSX = (int)(WindowSize.Width * relLeft);
-                var relSY = (int)(WindowSize.Height * relTop);
+                // Translate area x/y offset and width/height to window sizes/points
+                var x = (float)((float)area.XOffset / (float)sourceSize.Width) * (float)WindowSize.Width;
+                var y = (float)((float)area.YOffset / (float)sourceSize.Height) * (float)WindowSize.Height;
+                var W = (float)((float)area.Width / (float)sourceSize.Width) * (float)WindowSize.Width;
+                var H = (float)((float)area.Height / (float)sourceSize.Height) * (float)WindowSize.Height;
 
-                // Relative end X/Y scaled to capture window size
-                var relRight = (double)(area.XOffset + area.Width) / sourceSize.Width;
-                var relBottom = (double)(area.YOffset + area.Height) / sourceSize.Height;
-                var relEX = (int)(WindowSize.Width - (WindowSize.Width * relRight));
-                var relEY = (int)(WindowSize.Height - (WindowSize.Height * relBottom));
-
-                // Negative offset to hide the start x/y clip
-                ContentSprite.Offset = new Vector3(-relSX, -relSY, 0);
-
-                // Size to end + start relative to window size + 1
-                ContentSprite.RelativeSizeAdjustment = new Vector2(1f + ((float)(relEX + relSX) / (float)WindowSize.Width), 1f + ((float)(relEY + relSX) / (float)WindowSize.Height));
-
-                // Clip source content
-                ContentSprite.Clip = ContentCompositor.CreateInsetClip(relSX, relSY, relEX, relEY);
+                // Create translation and scaling matrices
+                var translation = Matrix4x4.CreateTranslation(-x, -y, 0);
+                var scaling = Matrix4x4.CreateScale(((float)WindowSize.Width / W), ((float)WindowSize.Height / H), 1);
+                ContentSprite.TransformMatrix = translation * scaling;
             }
         }
 
