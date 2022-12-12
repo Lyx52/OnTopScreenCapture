@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -181,10 +182,9 @@ namespace OnTopCapture.Utils
         /// <returns></returns>
         public static List<MonitorInfo> GetMonitors()
         {
-            var result = new List<MonitorInfo>();
-
+            var result = new List<MonitorInfo>(); 
             EnumDisplayMonitors(IntPtr.Zero, IntPtr.Zero,
-                delegate (IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData)
+                (IntPtr hMonitor, IntPtr hdcMonitor, ref RECT lprcMonitor, IntPtr dwData) =>
                 {
                     MonitorInfoEx mi = new MonitorInfoEx();
                     mi.Size = Marshal.SizeOf(mi);

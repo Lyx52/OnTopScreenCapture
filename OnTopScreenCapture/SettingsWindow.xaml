@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OnTopCapture"
         mc:Ignorable="d"
-        Title="Settings" Height="400" Width="300" FontSize="16" ResizeMode="NoResize" Closing="Window_Closing">
+        Title="Settings" Height="420" Width="300" FontSize="16" ResizeMode="NoResize" Closing="Window_Closing">
     <StackPanel Margin="5 5">
         <Label Margin="0 5">Default Opacity</Label>
         <ComboBox Name="cboxOpacityValues"  ItemsSource="{Binding OpacityValues}" SelectedItem="{Binding CurrentOpacityValue, Mode=TwoWay}"/>

@@ -18,7 +18,7 @@ namespace OnTopCapture
         public SelectionBackElement(FrameworkElement parent)
         {
             SelectionBrush = new SolidColorBrush(Colors.Yellow);
-            SelectionPen = new Pen(new SolidColorBrush(Colors.Yellow), 1);
+            SelectionPen = new Pen(SelectionBrush, 1);
             SelectionVisual = new DrawingVisual();
             this.AddVisualChild(SelectionVisual);
 
@@ -40,12 +40,14 @@ namespace OnTopCapture
 
         private void MouseDownHandler(Object sender, MouseButtonEventArgs e)
         {
+            // Sākam zīmēt
             DrawStart = e.GetPosition(this);
             IsDrawing = true;
         }
 
         private void MouseMoveHandler(Object sender, MouseEventArgs e)
         {
+            // Pārvietojam beigu punktu un pārzīmējam taisnsturi, ja vēl zīmējam.
             if (IsDrawing && e.LeftButton == MouseButtonState.Pressed)
             {
                 Point endPoint = e.GetPosition(this);
@@ -55,6 +57,7 @@ namespace OnTopCapture
 
         private void MouseUpHandler(Object sender, MouseButtonEventArgs e)
         {
+            // Beidzam zīmēt
             DrawStart = e.GetPosition(this);
             IsDrawing = false;
         }

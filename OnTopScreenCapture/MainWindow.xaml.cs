@@ -46,7 +46,6 @@ namespace OnTopCapture
         /// Is capturing a window
         /// </summary>
         private bool mIsCapturing = false;
-        private int mLastWindowCount = 0;
         public bool IsCapturing
         {
             get => mIsCapturing;
@@ -196,8 +195,6 @@ namespace OnTopCapture
         {
             MenuItem root = (MenuItem)rootObject;
             var windows = WindowHelper.GetWindows();
-            if (windows.Count == mLastWindowCount)
-                return;
                 
             // Add/Refresh menu items
             root.Items.Clear();
